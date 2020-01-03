@@ -22,6 +22,7 @@ namespace LogicalDocWrapper
         private const int SW_SHOWNORMAL = 1;
         private const int SW_SHOWMINIMIZED = 2;
         private const int SW_SHOWMAXIMIZED = 3;
+        private bool reallyClose = false;
 
         [DllImport("user32.dll")]
         private static extern bool ShowWindowAsync(IntPtr hWnd, int nCmdShow);
@@ -226,7 +227,9 @@ namespace LogicalDocWrapper
 
         private void button2_Click(object sender, EventArgs e)
         {
-            LogicalDocProc.Kill();
+            button3_Click(sender, e);
+            reallyClose = true;
+            Close();
         }
 
         private void button3_Click(object sender, EventArgs e)
@@ -263,6 +266,15 @@ namespace LogicalDocWrapper
             catch
             {
                 panel1.BackColor = Color.Red;
+            }
+        }
+
+        private void Form1_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            if (reallyClose == false)
+            {
+                e.Cancel = true;
+                this.WindowState = FormWindowState.Minimized;
             }
         }
     }
