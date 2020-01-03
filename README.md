@@ -48,6 +48,13 @@ There you can change the port.
 If you were able to connect (this takes up to 2 minutes) you should go on with the setup (link at the bottom of the page)
 Now you should also create a new database within your mariadb instance. For this you could use a MYSQL Client like MYSQL Workbench. 
 
+For connect to mysql database you should enter the following settings:
+
+Driver: com.mysql.jdbc.Driver
+Connection: jdbc:mysql://localhost/yourDatabase
+
+
+
 After that you should be ready to use your instance. 
 
 Look at this guide for more informations: https://wiki.logicaldoc.com/wiki/Quick_Install
