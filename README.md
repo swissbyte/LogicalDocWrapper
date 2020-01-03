@@ -1,12 +1,11 @@
 <h3 align="center">
-  <img src="https://teedy.io/img/github-title.png" alt="Teedy" width=500 />
+  LogicalDocWrapper
 </h3>
 
-[![Twitter: @teedyio](https://img.shields.io/badge/contact-@teedyio-blue.svg?style=flat)](https://twitter.com/teedyio)
 [![License: GPL v2](https://img.shields.io/badge/License-GPL%20v2-blue.svg)](https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html)
 [![Build Status](https://secure.travis-ci.org/sismics/docs.png)](http://travis-ci.org/sismics/docs)
 
-Teedy is an open source, lightweight document management system wrapper for LogicalDoc community edition.
+LogicalDocWrapper is an open source, lightweight document management system wrapper for LogicalDoc community edition.
 
 <hr />
 <h2 align="center">
