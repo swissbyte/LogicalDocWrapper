@@ -10,6 +10,8 @@ using System.Windows.Forms;
 using System.Diagnostics;
 using System.Collections;
 using System.Runtime.InteropServices;
+using System.IO;
+using System.IO.Compression;
 
 namespace LogicalDocWrapper
 {
@@ -213,6 +215,8 @@ namespace LogicalDocWrapper
         {
             textBox3.Text = Properties.Settings.Default["LogicalDocPath"].ToString();
             textBox4.Text = Properties.Settings.Default["MariaDBPath"].ToString();
+            textBox5.Text = Properties.Settings.Default["VaultPath"].ToString();
+            textBox6.Text = Properties.Settings.Default["BackupPath"].ToString();
         }
 
         private void textBox4_MouseDoubleClick(object sender, MouseEventArgs e)
@@ -228,6 +232,7 @@ namespace LogicalDocWrapper
         private void button2_Click(object sender, EventArgs e)
         {
             button3_Click(sender, e);
+            CreateBackupZip();
             reallyClose = true;
             Close();
         }
@@ -235,14 +240,26 @@ namespace LogicalDocWrapper
         private void button3_Click(object sender, EventArgs e)
         {
             //stopLogicalDoc();
-            MariaDBProc.CloseMainWindow();
-            MariaDBProc.Dispose();
-            MariaDBProc = new Process();
+            try
+            {
 
-            stopLogicalDoc();
 
-            LogicalDocProc.Dispose();
-            LogicalDocProc = new Process();
+                if (MariaDBProc.HasExited == false)
+                {
+                    MariaDBProc.CloseMainWindow();
+                    MariaDBProc.Dispose();
+                    MariaDBProc = new Process();
+                }
+
+                stopLogicalDoc();
+
+                LogicalDocProc.Dispose();
+                LogicalDocProc = new Process();
+            }
+            catch
+            {
+
+            }
 
         }
 
@@ -276,6 +293,108 @@ namespace LogicalDocWrapper
                 e.Cancel = true;
                 this.WindowState = FormWindowState.Minimized;
             }
+        }
+
+        private static void DirectoryCopy(string sourceDirName, string destDirName, bool copySubDirs)
+        {
+            // Get the subdirectories for the specified directory.
+            DirectoryInfo dir = new DirectoryInfo(sourceDirName);
+
+            if (!dir.Exists)
+            {
+                throw new DirectoryNotFoundException(
+                    "Source directory does not exist or could not be found: "
+                    + sourceDirName);
+            }
+
+            DirectoryInfo[] dirs = dir.GetDirectories();
+            // If the destination directory doesn't exist, create it.
+            if (!Directory.Exists(destDirName))
+            {
+                Directory.CreateDirectory(destDirName);
+            }
+
+            // Get the files in the directory and copy them to the new location.
+            FileInfo[] files = dir.GetFiles();
+            foreach (FileInfo file in files)
+            {
+                string temppath = Path.Combine(destDirName, file.Name);
+                file.CopyTo(temppath, false);
+            }
+
+            // If copying subdirectories, copy them and their contents to new location.
+            if (copySubDirs)
+            {
+                foreach (DirectoryInfo subdir in dirs)
+                {
+                    string temppath = Path.Combine(destDirName, subdir.Name);
+                    DirectoryCopy(subdir.FullName, temppath, copySubDirs);
+                }
+            }
+        }
+
+        private void CreateBackupZip()
+        {
+            
+            string startPath = textBox5.Text;//folder to add
+
+            try
+            {
+                Directory.Delete(startPath + "\\mysqlDump", true);
+                Directory.Delete(startPath + "\\confDump\\server", true);
+                Directory.Delete(startPath + "\\confDump\\app", true);
+            }
+            catch
+            {
+
+            }
+
+            Directory.CreateDirectory(startPath + "\\mysqlDump");
+            Directory.CreateDirectory(startPath + "\\confDump\\server");
+            Directory.CreateDirectory(startPath + "\\confDump\\app");
+
+            DirectoryCopy(textBox4.Text + "\\data\\", startPath + "\\mysqlDump", true);
+            DirectoryCopy(textBox3.Text + "\\conf\\", startPath + "\\confDump\\server", true);
+            DirectoryCopy(textBox3.Text + "\\webapps\\logicaldoc\\WEB-INF\\classes\\", startPath + "\\confDump\\app", true);
+
+            string zipPath = textBox6.Text + "\\vaultBackup_" + DateTime.Now.ToString("dd.MM.yyyy_HH.mm.ss") + ".zip";//URL for your ZIP file
+            ZipFile.CreateFromDirectory(startPath, zipPath, CompressionLevel.Optimal, true);
+            Directory.Delete(startPath + "\\mysqlDump",true);
+            Directory.Delete(startPath + "\\confDump\\server",true);
+            Directory.Delete(startPath + "\\confDump\\app",true);
+            //AddSingleFileToZip(zipPath, AppDomain.CurrentDomain.BaseDirectory + "docbase.db");
+            //string extractPath = @"c:\example\extract";//path to extract
+            //ZipFile.ExtractToDirectory(zipPath, extractPath);
+        }
+
+        private void button4_Click(object sender, EventArgs e)
+        {
+            CreateBackupZip();
+        }
+
+        private void textBox5_MouseDoubleClick(object sender, MouseEventArgs e)
+        {
+            folderBrowserDialog1.SelectedPath = textBox5.Text;
+            folderBrowserDialog1.ShowDialog();
+            textBox5.Text = folderBrowserDialog1.SelectedPath;
+
+            Properties.Settings.Default["VaultPath"] = textBox5.Text;
+            Properties.Settings.Default.Save();
+        }
+
+        private void textBox6_MouseDoubleClick(object sender, MouseEventArgs e)
+        {
+            folderBrowserDialog1.SelectedPath = textBox6.Text;
+            folderBrowserDialog1.ShowDialog();
+            textBox6.Text = folderBrowserDialog1.SelectedPath;
+
+            Properties.Settings.Default["BackupPath"] = textBox6.Text;
+            Properties.Settings.Default.Save();
+        }
+
+        private void Form1_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            CreateBackupZip();
         }
     }
 }
